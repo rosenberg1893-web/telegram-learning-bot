@@ -11,9 +11,9 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
 import java.util.List;
 import java.util.Optional;
-import static com.lbt.telegram_learning_bot.util.Constants.*;
 
 @Repository
 public interface UserProgressRepository extends JpaRepository<UserProgress, Long> {
@@ -112,4 +112,9 @@ public interface UserProgressRepository extends JpaRepository<UserProgress, Long
     List<Object[]> getQuestionStatsByUserWithTitle(@Param("userId") Long userId);
     @Query("SELECT p.course FROM UserProgress p WHERE p.userId = :userId GROUP BY p.course ORDER BY MAX(p.lastAccessedAt) DESC")
     Page<Course> findCoursesWithProgressOrderByLastAccessed(@Param("userId") Long userId, Pageable pageable);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM UserProgress up WHERE up.question.id = :questionId")
+    void deleteByQuestionId(@Param("questionId") Long questionId);
 }

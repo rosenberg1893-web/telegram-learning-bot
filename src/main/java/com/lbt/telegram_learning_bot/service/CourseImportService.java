@@ -18,7 +18,6 @@ import java.util.List;
 
 import static com.lbt.telegram_learning_bot.util.Constants.ENTITY_BLOCK;
 import static com.lbt.telegram_learning_bot.util.Constants.ENTITY_QUESTION;
-import static com.lbt.telegram_learning_bot.util.Constants.*;
 
 @Slf4j
 @Service
@@ -34,6 +33,7 @@ public class CourseImportService {
     private final BlockImageRepository blockImageRepository;
     private final QuestionImageRepository questionImageRepository;
     private final ObjectMapper objectMapper;
+    private final UserProgressRepository userProgressRepository;
 
     /**
      * Парсит JSON из InputStream и создаёт курс с полной структурой (без изображений).
@@ -307,20 +307,29 @@ public class CourseImportService {
     // Метод для обновления темы (для редактирования темы)
     @Transactional
     public Topic importTopic(TopicImportDto dto, Topic existingTopic) {
-        validateTopicImportDto(dto); // <-- добавить
-        // Очищаем старые блоки и вопросы (можно каскадно, но проще удалить и создать новые)
-        // Для простоты: удаляем все блоки и вопросы темы, затем создаём заново.
-        // Важно сохранить порядок, если нужно. Используем каскадное удаление.
-        topicRepository.delete(existingTopic); // удалит всё благодаря Cascade.ALL
-        // Создаём заново
+        validateTopicImportDto(dto);
+
+        // Удаляем все записи прогресса, связанные с вопросами темы
+        List<Block> blocks = blockRepository.findByTopicIdOrderByOrderIndexAsc(existingTopic.getId());
+        for (Block block : blocks) {
+            List<Question> questions = questionRepository.findByBlockIdOrderByOrderIndexAsc(block.getId());
+            for (Question question : questions) {
+                userProgressRepository.deleteByQuestionId(question.getId());
+            }
+        }
+
+        // Теперь можно безопасно удалить тему (каскадно удалятся блоки, вопросы, изображения)
+        topicRepository.delete(existingTopic);
+
+        // Создаём новую тему
         Topic newTopic = new Topic();
         newTopic.setSection(existingTopic.getSection());
         newTopic.setTitle(dto.getTitle());
         newTopic.setDescription(dto.getDescription());
-        newTopic.setOrderIndex(existingTopic.getOrderIndex()); // сохраняем порядок
+        newTopic.setOrderIndex(existingTopic.getOrderIndex());
         newTopic = topicRepository.save(newTopic);
 
-        // Создаём блоки и вопросы (аналогично importCourse, но с привязкой к newTopic)
+        // Создание блоков и вопросов (без изменений)
         int blockOrder = 0;
         if (dto.getBlocks() != null) {
             for (BlockImportDto blockDto : dto.getBlocks()) {
