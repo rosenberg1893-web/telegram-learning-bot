@@ -37,4 +37,6 @@ public class UserContext {
     private List<Integer> lastMediaMessageIds = new ArrayList<>();
     private Integer previousSectionPage = 0;   // страница списка разделов, откуда пришли
     private Integer previousTopicPage = 0;     // страница списка тем, откуда пришли
+    private Integer adminSectionsPage = 0;   // текущая страница списка разделов при редактировании
+    private Integer adminTopicsPage = 0;     // текущая страница списка тем при редактировании
 }

@@ -163,32 +163,32 @@ public class KeyboardBuilder {
     }
 
     public InlineKeyboardMarkup buildSectionsKeyboardForAdmin(PaginationResult<Section> result,
-                                                              Long courseId, String selectAction) {
+                                                              Long courseId,
+                                                              String selectAction,
+                                                              String backCallback) {
         List<InlineKeyboardButton[]> rows = new ArrayList<>();
         for (Section section : result.getItems()) {
             rows.add(new InlineKeyboardButton[]{
                     new InlineKeyboardButton(section.getTitle()).callbackData(selectAction + ":" + section.getId())
             });
         }
-
         addPaginationButtons(rows, result, CALLBACK_ADMIN_SECTIONS_PAGE, courseId.toString());
-        rows.add(new InlineKeyboardButton[]{new InlineKeyboardButton(BUTTON_MAIN_MENU).callbackData(CALLBACK_BACK_TO_COURSES)});
-
+        rows.add(new InlineKeyboardButton[]{new InlineKeyboardButton(BUTTON_MAIN_MENU).callbackData(backCallback)});
         return new InlineKeyboardMarkup(rows.toArray(new InlineKeyboardButton[0][]));
     }
 
     public InlineKeyboardMarkup buildTopicsKeyboardForAdmin(PaginationResult<Topic> result,
-                                                            Long sectionId, String selectAction) {
+                                                            Long sectionId,
+                                                            String selectAction,
+                                                            String backCallback) {
         List<InlineKeyboardButton[]> rows = new ArrayList<>();
         for (Topic topic : result.getItems()) {
             rows.add(new InlineKeyboardButton[]{
                     new InlineKeyboardButton(topic.getTitle()).callbackData(selectAction + ":" + topic.getId())
             });
         }
-
         addPaginationButtons(rows, result, CALLBACK_ADMIN_TOPICS_PAGE, sectionId.toString());
-        rows.add(new InlineKeyboardButton[]{new InlineKeyboardButton(BUTTON_MAIN_MENU).callbackData(CALLBACK_BACK_TO_SECTIONS)});
-
+        rows.add(new InlineKeyboardButton[]{new InlineKeyboardButton(BUTTON_MAIN_MENU).callbackData(backCallback)});
         return new InlineKeyboardMarkup(rows.toArray(new InlineKeyboardButton[0][]));
     }
 

@@ -250,7 +250,9 @@ public class AdminHandler extends BaseHandler {
             Long courseId = context.getEditingCourseId();
             var result = navigationService.getSectionsPage(courseId, 0);
             String text = MSG_SELECT_SECTION;
-            InlineKeyboardMarkup keyboard = keyboardBuilder.buildSectionsKeyboardForAdmin(result, courseId, CALLBACK_SELECT_SECTION_FOR_EDIT);
+            // Добавлен четвёртый аргумент CALLBACK_EDIT_COURSE
+            InlineKeyboardMarkup keyboard = keyboardBuilder.buildSectionsKeyboardForAdmin(
+                    result, courseId, CALLBACK_SELECT_SECTION_FOR_EDIT, CALLBACK_EDIT_COURSE);
             editMessage(userId, messageId, text, keyboard);
             sessionService.updateSessionState(userId, BotState.EDIT_COURSE_SECTION_CHOOSE);
         }
@@ -282,7 +284,9 @@ public class AdminHandler extends BaseHandler {
             Long sectionId = context.getEditingSectionId();
             var result = navigationService.getTopicsPage(sectionId, 0);
             String text = MSG_SELECT_TOPIC;
-            InlineKeyboardMarkup keyboard = keyboardBuilder.buildTopicsKeyboardForAdmin(result, sectionId, CALLBACK_SELECT_TOPIC_FOR_EDIT);
+            // Добавлен четвёртый аргумент CALLBACK_ADMIN_BACK_TO_SECTIONS
+            InlineKeyboardMarkup keyboard = keyboardBuilder.buildTopicsKeyboardForAdmin(
+                    result, sectionId, CALLBACK_SELECT_TOPIC_FOR_EDIT, CALLBACK_ADMIN_BACK_TO_SECTIONS);
             editMessage(userId, messageId, text, keyboard);
             sessionService.updateSessionState(userId, BotState.EDIT_SECTION_CHOOSE_TOPIC);
         }
@@ -419,7 +423,8 @@ public class AdminHandler extends BaseHandler {
 
             var result = navigationService.getSectionsPage(courseId, 0);
             String text = MSG_SELECT_SECTION;
-            InlineKeyboardMarkup keyboard = keyboardBuilder.buildSectionsKeyboardForAdmin(result, courseId, CALLBACK_SELECT_SECTION_FOR_EDIT);
+            InlineKeyboardMarkup keyboard = keyboardBuilder.buildSectionsKeyboardForAdmin(
+                    result, courseId, CALLBACK_SELECT_SECTION_FOR_EDIT, CALLBACK_EDIT_COURSE);
             sendMessage(userId, text, keyboard);
             sessionService.updateSessionState(userId, BotState.EDIT_COURSE_SECTION_CHOOSE);
 
@@ -557,11 +562,17 @@ public class AdminHandler extends BaseHandler {
         sessionService.updateSession(userId, BotState.AWAITING_IMAGE, context);
     }
     public void showEditCourseSectionsPage(Long userId, Integer messageId, Long courseId, int page) {
+        UserContext context = sessionService.getCurrentContext(userId);
+        context.setAdminSectionsPage(page);
+        sessionService.updateSessionContext(userId, context);
+
         var result = navigationService.getSectionsPage(courseId, page);
         String courseTitle = navigationService.getCourseTitle(courseId);
         String text = String.format(FORMAT_EDIT_SECTIONS_HEADER,
                 courseTitle, page + 1, result.getTotalPages(), result.getTotalItems());
-        InlineKeyboardMarkup keyboard = keyboardBuilder.buildSectionsKeyboardForAdmin(result, courseId, CALLBACK_SELECT_SECTION_FOR_EDIT);
+        // backCallback указывает на возврат к списку курсов
+        InlineKeyboardMarkup keyboard = keyboardBuilder.buildSectionsKeyboardForAdmin(result, courseId,
+                CALLBACK_SELECT_SECTION_FOR_EDIT, CALLBACK_EDIT_COURSE);
         if (messageId != null) {
             editMessage(userId, messageId, text, keyboard);
         } else {
@@ -569,11 +580,17 @@ public class AdminHandler extends BaseHandler {
         }
     }
     public void showEditTopicsPage(Long userId, Integer messageId, Long sectionId, int page) {
+        UserContext context = sessionService.getCurrentContext(userId);
+        context.setAdminTopicsPage(page);
+        sessionService.updateSessionContext(userId, context);
+
         var result = navigationService.getTopicsPage(sectionId, page);
         String sectionTitle = navigationService.getSectionTitle(sectionId);
         String text = String.format(FORMAT_EDIT_TOPICS_HEADER,
                 sectionTitle, page + 1, result.getTotalPages(), result.getTotalItems());
-        InlineKeyboardMarkup keyboard = keyboardBuilder.buildTopicsKeyboardForAdmin(result, sectionId, CALLBACK_SELECT_TOPIC_FOR_EDIT);
+        // backCallback ведёт на admin_back_to_sections
+        InlineKeyboardMarkup keyboard = keyboardBuilder.buildTopicsKeyboardForAdmin(result, sectionId,
+                CALLBACK_SELECT_TOPIC_FOR_EDIT, CALLBACK_ADMIN_BACK_TO_SECTIONS);
         if (messageId != null) {
             editMessage(userId, messageId, text, keyboard);
         } else {
@@ -599,7 +616,9 @@ public class AdminHandler extends BaseHandler {
         UserContext context = sessionService.getCurrentContext(userId);
         Long courseId = context.getEditingCourseId();
         if (courseId != null) {
-            showEditCourseSectionsPage(userId, messageId, courseId, 0);
+            Integer page = context.getAdminSectionsPage();
+            if (page == null) page = 0;
+            showEditCourseSectionsPage(userId, messageId, courseId, page);
         } else {
             sendMainMenu(userId, messageId);
         }
@@ -609,7 +628,9 @@ public class AdminHandler extends BaseHandler {
         UserContext context = sessionService.getCurrentContext(userId);
         Long sectionId = context.getEditingSectionId();
         if (sectionId != null) {
-            showEditTopicsPage(userId, messageId, sectionId, 0);
+            Integer page = context.getAdminTopicsPage();
+            if (page == null) page = 0;
+            showEditTopicsPage(userId, messageId, sectionId, page);
         } else {
             sendMainMenu(userId, messageId);
         }
