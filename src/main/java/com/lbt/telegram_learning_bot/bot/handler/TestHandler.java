@@ -453,20 +453,20 @@ public class TestHandler extends BaseHandler {
         String backCallbackData;
         int currentNumber;
         int totalQuestions;
+
         if (context.isTestMode()) {
-            String testType = context.getTestType();
-            if (TEST_TYPE_MISTAKE.equals(testType)) {
-                backCallbackData = CALLBACK_MAIN_MENU;
-            } else if (TEST_TYPE_SECTION.equals(testType)) {
-                backCallbackData = CALLBACK_BACK_TO_SECTIONS;
-            } else if (TEST_TYPE_COURSE.equals(testType)) {
-                backCallbackData = CALLBACK_BACK_TO_COURSES;
-            } else {
-                backCallbackData = CALLBACK_BACK_TO_TOPICS;
-            }
             currentNumber = context.getCurrentTestQuestionIndex() + 1;
             totalQuestions = context.getTestQuestionIds().size();
+
+            if (currentNumber == 1) {
+                // Первый вопрос – возврат в меню (список курсов/разделов/тем)
+                backCallbackData = getBackCallbackData(context);
+            } else {
+                // Второй и последующие – переход к предыдущему вопросу
+                backCallbackData = CALLBACK_PREV_QUESTION;
+            }
         } else {
+            // Учебный режим – без изменений (возврат к списку разделов)
             backCallbackData = CALLBACK_BACK_TO_SECTIONS;
             currentNumber = context.getCurrentBlockQuestionIndex() + 1;
             totalQuestions = context.getCurrentBlockQuestionIds().size();
