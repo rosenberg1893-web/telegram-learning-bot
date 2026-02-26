@@ -129,6 +129,10 @@ public class AdminHandler extends BaseHandler {
             promptCreateCourse(userId, messageId);
         } else if (state == BotState.AWAITING_IMAGE) {
             promptCurrentImage(userId, messageId);
+        } else if (state == BotState.EDIT_TOPIC_JSON) {
+            // Повторно запрашиваем JSON для темы
+            editMessage(userId, messageId, MSG_SEND_JSON_TOPIC, createAdminCancelKeyboardWithBackToTopics());
+            // состояние остаётся EDIT_TOPIC_JSON
         }
     }
 
@@ -456,9 +460,15 @@ public class AdminHandler extends BaseHandler {
 
         } catch (InvalidJsonException e) {
             log.warn("Topic JSON validation error: {}", e.getMessage());
-            sendMessage(userId, e.getMessage(), createRetryOrCancelKeyboard());
+            // Создаём клавиатуру: Повторить -> retry, Отмена -> admin_back_to_topics
+            InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup(
+                    new InlineKeyboardButton[]{new InlineKeyboardButton(BUTTON_RETRY).callbackData(CALLBACK_RETRY)},
+                    new InlineKeyboardButton[]{new InlineKeyboardButton(BUTTON_CANCEL).callbackData(CALLBACK_ADMIN_BACK_TO_TOPICS)}
+            );
+            sendMessage(userId, e.getMessage(), keyboard);
         } catch (Exception e) {
             log.error("Error importing topic from JSON", e);
+            // Здесь тоже можно использовать ту же логику, но пока оставим общую ошибку
             sendMessage(userId, MSG_JSON_PARSE_ERROR, createRetryOrCancelKeyboard());
         } finally {
             if (progressMessageId != null) {
