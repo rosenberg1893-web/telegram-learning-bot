@@ -39,4 +39,5 @@ public class UserContext {
     private Integer previousTopicPage = 0;     // страница списка тем, откуда пришли
     private Integer adminSectionsPage = 0;   // текущая страница списка разделов при редактировании
     private Integer adminTopicsPage = 0;     // текущая страница списка тем при редактировании
+    private Integer previousCoursesPage = 0; // страница списка курсов, откуда пришли в тест
 }

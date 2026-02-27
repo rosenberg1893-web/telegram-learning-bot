@@ -224,31 +224,31 @@ public class CourseNavigationHandler extends BaseHandler {
         sessionService.updateSessionState(userId, BotState.SEARCH_COURSES);
     }
     public void handleBackToCourses(Long userId, Integer messageId) {
-        UserContext context = sessionService.getCurrentContext(userId);   // добавить
+        UserContext context = sessionService.getCurrentContext(userId);
         if (context.getCurrentCourseId() != null) {
             navigationService.updateCourseLastAccessedOnExit(userId, context.getCurrentCourseId());
         }
         clearMediaMessages(userId);
 
         String source = context.getCoursesListSource();
-        log.info("handleBackToCourses: userId={}, source={}", userId, source);
+        Integer page = context.getPreviousCoursesPage(); // <-- получаем сохранённую страницу
+        if (page == null) page = 0;
 
         if (SOURCE_MY_COURSES.equals(source)) {
-            showMyCourses(userId, messageId, 0);
+            showMyCourses(userId, messageId, page);
         } else if (SOURCE_ALL_COURSES.equals(source)) {
-            showAllCourses(userId, messageId, 0);
+            showAllCourses(userId, messageId, page);
         } else if (SOURCE_SEARCH.equals(source)) {
             String query = context.getSearchQuery();
-            var result = navigationService.getFoundCoursesPage(query, 0);
-            String text = "Результаты поиска (страница 1):";
+            var result = navigationService.getFoundCoursesPage(query, page);
+            String text = "Результаты поиска (страница " + (page + 1) + "):";
             InlineKeyboardMarkup keyboard = keyboardBuilder.buildCoursesKeyboard(result, userId, SOURCE_SEARCH, CALLBACK_SELECT_COURSE, true);
             editMessage(userId, messageId, text, keyboard);
             sessionService.updateSessionState(userId, BotState.SEARCH_COURSES);
         } else {
-            showAllCourses(userId, messageId, 0);
+            showAllCourses(userId, messageId, page);
         }
     }
-
     public void handleBackToSections(Long userId, Integer messageId) {
         clearMediaMessages(userId);
         UserContext context = sessionService.getCurrentContext(userId);

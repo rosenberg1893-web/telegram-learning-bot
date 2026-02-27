@@ -49,6 +49,9 @@ public class TestHandler extends BaseHandler {
     }
     // ================== Публичные методы для диспетчера ==================
     public void handleTestTopic(Long userId, Integer messageId, Long topicId) {
+        UserContext context = sessionService.getCurrentContext(userId);
+        context.setPreviousTopicPage(context.getCurrentPage()); // <-- сохраняем страницу тем
+        sessionService.updateSessionContext(userId, context);
         List<Question> questions = navigationService.getAllQuestionsForTopic(topicId);
         if (questions.isEmpty()) {
             String text = MSG_TOPIC_NO_QUESTIONS;
@@ -61,7 +64,6 @@ public class TestHandler extends BaseHandler {
         }
         questions = new ArrayList<>(questions);
         Collections.shuffle(questions);
-        UserContext context = sessionService.getCurrentContext(userId);
         context.setTestMode(true);
         context.setTestType(TEST_TYPE_TOPIC);
         context.setTestQuestionIds(questions.stream().map(Question::getId).toList());
@@ -75,6 +77,9 @@ public class TestHandler extends BaseHandler {
     }
 
     public void handleTestSection(Long userId, Integer messageId, Long sectionId) {
+        UserContext context = sessionService.getCurrentContext(userId);
+        context.setPreviousSectionPage(context.getCurrentPage()); // <-- сохраняем страницу разделов
+        sessionService.updateSessionContext(userId, context);
         List<Question> questions = navigationService.getRandomQuestionsForSection(sectionId, 2);
         if (questions.isEmpty()) {
             String text = MSG_SECTION_NO_QUESTIONS;
@@ -87,7 +92,6 @@ public class TestHandler extends BaseHandler {
         }
         questions = new ArrayList<>(questions);
         Collections.shuffle(questions);
-        UserContext context = sessionService.getCurrentContext(userId);
         context.setTestMode(true);
         context.setTestType(TEST_TYPE_SECTION);
         context.setTestQuestionIds(questions.stream().map(Question::getId).toList());
@@ -101,6 +105,9 @@ public class TestHandler extends BaseHandler {
     }
 
     public void handleTestCourse(Long userId, Integer messageId, Long courseId) {
+        UserContext context = sessionService.getCurrentContext(userId);
+        context.setPreviousCoursesPage(context.getCurrentPage()); // <-- сохраняем страницу курсов
+        sessionService.updateSessionContext(userId, context);
         List<Question> questions = navigationService.getRandomQuestionsForCourse(courseId, 2);
         if (questions.isEmpty()) {
             String text = MSG_COURSE_NO_QUESTIONS;
@@ -113,7 +120,6 @@ public class TestHandler extends BaseHandler {
         }
         questions = new ArrayList<>(questions);
         Collections.shuffle(questions);
-        UserContext context = sessionService.getCurrentContext(userId);
         context.setTestMode(true);
         context.setTestType(TEST_TYPE_COURSE);
         context.setTestQuestionIds(questions.stream().map(Question::getId).toList());
